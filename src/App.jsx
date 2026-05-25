@@ -907,7 +907,7 @@ function App() {
                           baseUrl: event.target.value,
                         }))
                       }
-                      placeholder="http://localhost:3000"
+                      placeholder="https://repairbot-api.onrender.com/"
                     />
                   </div>
                   <div className="field">

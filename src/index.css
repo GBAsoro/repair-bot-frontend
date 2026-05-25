@@ -558,22 +558,352 @@ action-btn {
   }
 }
 
+/* Mobile: Tablet and smaller */
 @media (max-width: 768px) {
+  .topbar {
+    padding: 0 1rem;
+    height: 52px;
+  }
+  .topbar-brand {
+    font-size: 14px;
+    gap: 8px;
+  }
+  .topbar-brand .icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  .topbar-status {
+    font-size: 11px;
+  }
+
   .layout {
     grid-template-columns: 1fr;
   }
   .sidebar {
     display: none;
   }
+  .main {
+    padding: 1.5rem 1rem;
+  }
+  .page-header h2 {
+    font-size: 18px;
+  }
+  .page-header p {
+    font-size: 13px;
+  }
+
+  .card {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  .card-title {
+    font-size: 14px;
+    margin-bottom: 1rem;
+  }
+
   .form-grid-2,
   .form-grid-3,
   .form-grid-4 {
     grid-template-columns: 1fr;
   }
+  .field label {
+    font-size: 12px;
+  }
+  .field input,
+  .field select {
+    font-size: 16px;
+    padding: 10px;
+  }
+
   .config-fields {
     grid-template-columns: 1fr;
   }
+  .config-fields input {
+    font-size: 16px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  .btn-row {
+    flex-direction: column;
+  }
+  .btn-row .btn {
+    width: 100%;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 0.75rem 1rem;
+  }
+  .stat-label {
+    font-size: 11px;
+  }
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+  .search-bar input {
+    width: 100%;
+  }
+  .search-bar .btn {
+    width: 100%;
+  }
+
+  table {
+    font-size: 12px;
+  }
+  thead th {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  tbody td {
+    padding: 8px 6px;
+  }
+  .mono {
+    font-size: 11px;
+  }
+
+  .lookup-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .lookup-item {
+    padding: 0.5rem 0;
+  }
+
+  .badge {
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+}
+
+/* Mobile: Small phones */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  .topbar {
+    padding: 0 0.75rem;
+    height: 48px;
+  }
+  .topbar-brand {
+    font-size: 13px;
+    gap: 6px;
+  }
+  .topbar-brand .icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  .topbar-status {
+    font-size: 10px;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .main {
+    padding: 1rem 0.75rem;
+  }
+  .page-header {
+    margin-bottom: 1rem;
+  }
+  .page-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .page-header p {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .card {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+  }
+  .card-title {
+    font-size: 13px;
+    margin-bottom: 0.75rem;
+  }
+
+  .field {
+    gap: 4px;
+  }
+  .field label {
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+  .field .hint {
+    font-size: 11px;
+  }
+
+  .checkbox-row {
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+  .checkbox-row label {
+    font-size: 13px;
+  }
+
+  .config-fields {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .config-fields input {
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+  .config-bar {
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+  .config-bar-title {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+  .btn-row {
+    gap: 8px;
+  }
+  .btn-row .btn {
+    width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .stat-card {
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+  .stat-label {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .search-bar {
+    gap: 6px;
+    margin-bottom: 0.75rem;
+  }
+  .search-bar input {
+    padding: 8px;
+    font-size: 16px;
+  }
+
+  table {
+    font-size: 11px;
+  }
+  thead th {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+  tbody td {
+    padding: 6px 4px;
+  }
+  .mono {
+    font-size: 10px;
+  }
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+
+  .lookup-result {
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+  }
+  .lookup-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .lookup-item .lk-label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .lookup-item .lk-value {
+    font-size: 12px;
+  }
+
+  .badge {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .alert {
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 0.75rem;
+  }
+
+  .divider {
+    margin: 0.75rem 0;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+  .empty-state .icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+
+  /* Touch-friendly improvements */
+  .btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-item {
+    min-height: 44px;
+  }
+  .action-btn {
+    min-height: 40px;
+    min-width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
