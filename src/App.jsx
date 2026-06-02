@@ -5,11 +5,14 @@ import {
   getHeaders,
   getRecordsFromResponse,
   normalizeRecord,
+  normalizeTicket,
   formatDate,
   toInputDate,
   validateSerial,
   statusBadgeClass,
   statusBadgeLabel,
+  ticketBadgeClass,
+  ticketBadgeLabel,
 } from "./services/api";
 
 const blankForm = {
@@ -21,10 +24,19 @@ const blankForm = {
   eligible: false,
 };
 
+const blankTicketForm = {
+  ticketNumber: "",
+  serial: "",
+  status: "Open",
+  subject: "",
+  description: "",
+};
+
 const navItems = [
   { key: "add", label: "Add record", icon: "➕" },
   { key: "list", label: "All records", icon: "📋" },
   { key: "lookup", label: "Look up serial", icon: "🔍" },
+  { key: "tickets", label: "Tickets", icon: "🎫" },
   { key: "config", label: "API config", icon: "⚙️" },
 ];
 
@@ -43,6 +55,16 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingRecords, setLoadingRecords] = useState(false);
 
+  const [tickets, setTickets] = useState([]);
+  const [ticketSearchValue, setTicketSearchValue] = useState("");
+  const [ticketSearchType, setTicketSearchType] = useState("ticket");
+  const [ticketLookupResult, setTicketLookupResult] = useState(null);
+  const [ticketForm, setTicketForm] = useState(blankTicketForm);
+  const [ticketEditId, setTicketEditId] = useState(null);
+  const [ticketEditStatus, setTicketEditStatus] = useState("Open");
+  const [ticketLoading, setTicketLoading] = useState(false);
+  const [ticketSearchQuery, setTicketSearchQuery] = useState("");
+
   useEffect(() => {
     setCfg(loadConfigFromStorage());
   }, []);
@@ -50,6 +72,9 @@ function App() {
   useEffect(() => {
     if (activePage === "list") {
       fetchRecords();
+    }
+    if (activePage === "tickets") {
+      fetchTickets();
     }
   }, [activePage]);
 
@@ -284,11 +309,203 @@ function App() {
     }
   };
 
+  const fetchTickets = async () => {
+    if (!requireConfig("tickets")) return;
+    setTicketLoading(true);
+    try {
+      const res = await fetch(`${cfg.baseUrl}/tools/tickets/`, {
+        headers: getHeaders(cfg, true),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        showAlert(
+          "tickets",
+          `✗ ${data?.message || "Failed to load tickets"}`,
+          "alert-error",
+        );
+        setTickets([]);
+      } else {
+        setTickets(getRecordsFromResponse(data).map(normalizeTicket));
+      }
+    } catch (error) {
+      showAlert(
+        "tickets",
+        `✗ Could not reach the API: ${error.message}`,
+        "alert-error",
+      );
+      setTickets([]);
+    } finally {
+      setTicketLoading(false);
+    }
+  };
+
+  const handleCreateTicket = async () => {
+    if (!requireConfig("tickets")) return;
+    if (!ticketForm.serial.trim()) {
+      showAlert("tickets", "⚠ Serial number is required", "alert-error");
+      return;
+    }
+
+    const payload = {
+      serial_number: ticketForm.serial.trim(),
+      status: ticketForm.status || undefined,
+      subject: ticketForm.subject || undefined,
+      description: ticketForm.description || undefined,
+    };
+
+    try {
+      const res = await fetch(`${cfg.baseUrl}/tools/tickets`, {
+        method: "POST",
+        headers: getHeaders(cfg, true),
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        showAlert(
+          "tickets",
+          `✓ Ticket created successfully — ${ticketForm.serial}`,
+          "alert-success",
+        );
+        setTicketForm(blankTicketForm);
+        fetchTickets();
+      } else {
+        showAlert(
+          "tickets",
+          `✗ ${res.status} ${data?.message || res.statusText || "Failed to create ticket"}`,
+          "alert-error",
+        );
+      }
+    } catch (error) {
+      showAlert("tickets", `✗ Network error: ${error.message}`, "alert-error");
+    }
+  };
+
+  const handleLookupTicket = async () => {
+    if (!requireConfig("tickets")) return;
+    if (!ticketSearchValue.trim()) {
+      showAlert(
+        "tickets",
+        "⚠ Enter a ticket number or serial number to search",
+        "alert-error",
+      );
+      return;
+    }
+
+    setTicketLookupResult(null);
+    const endpoint =
+      ticketSearchType === "serial"
+        ? `${cfg.baseUrl}/tools/tickets/serial/${encodeURIComponent(
+            ticketSearchValue.trim(),
+          )}`
+        : `${cfg.baseUrl}/tools/tickets/${encodeURIComponent(
+            ticketSearchValue.trim(),
+          )}`;
+
+    try {
+      const res = await fetch(endpoint, {
+        headers: getHeaders(cfg, false),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        setTicketLookupResult(normalizeTicket(data));
+      } else {
+        showAlert(
+          "tickets",
+          `✗ ${res.status} ${data?.message || res.statusText || "Ticket not found"}`,
+          "alert-error",
+        );
+      }
+    } catch (error) {
+      showAlert("tickets", `✗ Network error: ${error.message}`, "alert-error");
+    }
+  };
+
+  const openTicketEdit = (ticket) => {
+    setTicketEditId(ticket.id || ticket.ticket_number);
+    setTicketEditStatus(ticket.status || "Open");
+    setTicketLookupResult(ticket);
+  };
+
+  const handleUpdateTicket = async () => {
+    if (!requireConfig("tickets")) return;
+    if (!ticketEditId) {
+      showAlert("tickets", "⚠ Select a ticket to update", "alert-error");
+      return;
+    }
+
+    const payload = { status: ticketEditStatus || undefined };
+
+    try {
+      const res = await fetch(
+        `${cfg.baseUrl}/tools/tickets/${encodeURIComponent(ticketEditId)}/status`,
+        {
+          method: "PATCH",
+          headers: getHeaders(cfg, true),
+          body: JSON.stringify(payload),
+        },
+      );
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        showAlert("tickets", "✓ Ticket status updated", "alert-success");
+        fetchTickets();
+        setTicketEditId(null);
+      } else {
+        showAlert(
+          "tickets",
+          `✗ ${res.status} ${data?.message || res.statusText || "Failed to update ticket"}`,
+          "alert-error",
+        );
+      }
+    } catch (error) {
+      showAlert("tickets", `✗ Network error: ${error.message}`, "alert-error");
+    }
+  };
+
+  const handleDeleteTicket = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this ticket? This cannot be undone.",
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch(
+        `${cfg.baseUrl}/tools/tickets/${encodeURIComponent(id)}`,
+        {
+          method: "DELETE",
+          headers: getHeaders(cfg, true),
+        },
+      );
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        showAlert("tickets", "✓ Ticket deleted", "alert-success");
+        fetchTickets();
+      } else {
+        showAlert(
+          "tickets",
+          `✗ ${res.status} ${data?.message || res.statusText || "Failed to delete ticket"}`,
+          "alert-error",
+        );
+      }
+    } catch (error) {
+      showAlert("tickets", `✗ Network error: ${error.message}`, "alert-error");
+    }
+  };
+
   const filteredRecords = useMemo(() => {
     return records.filter((record) =>
       record.serial_number.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [records, searchQuery]);
+
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((ticket) =>
+      `${ticket.ticket_number} ${ticket.serial_number}`
+        .toLowerCase()
+        .includes(ticketSearchQuery.toLowerCase()),
+    );
+  }, [tickets, ticketSearchQuery]);
 
   const stats = {
     total: records.length,
@@ -363,23 +580,40 @@ function App() {
             </button>
             {warrantyOpen ? (
               <div className="nav-children">
-                {navItems.slice(0, 3).map((item) => (
-                  <button
-                    key={item.key}
-                    className={
-                      item.key === activePage
-                        ? "nav-item nav-child active"
-                        : "nav-item nav-child"
-                    }
-                    type="button"
-                    onClick={() => setActivePage(item.key)}
-                  >
-                    <span className="nav-icon">{item.icon}</span>
-                    {item.label}
-                  </button>
-                ))}
+                {navItems
+                  .filter(
+                    (item) => item.key !== "config" && item.key !== "tickets",
+                  )
+                  .map((item) => (
+                    <button
+                      key={item.key}
+                      className={
+                        item.key === activePage
+                          ? "nav-item nav-child active"
+                          : "nav-item nav-child"
+                      }
+                      type="button"
+                      onClick={() => setActivePage(item.key)}
+                    >
+                      <span className="nav-icon">{item.icon}</span>
+                      {item.label}
+                    </button>
+                  ))}
               </div>
             ) : null}
+          </div>
+          <div className="sidebar-section">
+            <div className="sidebar-label">Tickets</div>
+            <button
+              type="button"
+              className={
+                activePage === "tickets" ? "nav-item active" : "nav-item"
+              }
+              onClick={() => setActivePage("tickets")}
+            >
+              <span className="nav-icon">🎫</span>
+              Tickets
+            </button>
           </div>
           <div className="sidebar-section" style={{ marginTop: "1rem" }}>
             <div className="sidebar-label">Settings</div>
@@ -670,6 +904,355 @@ function App() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activePage === "tickets" && (
+            <div className="page active">
+              <div className="page-header">
+                <h2>Tickets</h2>
+                <p>Manage support tickets using the RepairBot API endpoints.</p>
+              </div>
+
+              {alerts.tickets ? (
+                <div className={`alert show ${alerts.tickets.type}`}>
+                  {alerts.tickets.message}
+                </div>
+              ) : null}
+
+              <div className="card">
+                <div className="card-title">🎫 Create ticket</div>
+                <div
+                  className="form-grid form-grid-2"
+                  style={{ marginBottom: "1rem" }}
+                >
+                  <div className="field">
+                    <label>Serial number</label>
+                    <input
+                      type="text"
+                      value={ticketForm.serial}
+                      onChange={(event) =>
+                        setTicketForm((prev) => ({
+                          ...prev,
+                          serial: event.target.value,
+                        }))
+                      }
+                      placeholder="SM100-ABC-001"
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Status</label>
+                    <select
+                      value={ticketForm.status}
+                      onChange={(event) =>
+                        setTicketForm((prev) => ({
+                          ...prev,
+                          status: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="Open">Open</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div
+                  className="form-grid form-grid-1"
+                  style={{ marginBottom: "1rem" }}
+                >
+                  <div className="field">
+                    <label>Subject</label>
+                    <input
+                      type="text"
+                      value={ticketForm.subject}
+                      onChange={(event) =>
+                        setTicketForm((prev) => ({
+                          ...prev,
+                          subject: event.target.value,
+                        }))
+                      }
+                      placeholder="Ticket subject"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className="form-grid form-grid-1"
+                  style={{ marginBottom: "1rem" }}
+                >
+                  <div className="field">
+                    <label>Description</label>
+                    <textarea
+                      rows={4}
+                      value={ticketForm.description}
+                      onChange={(event) =>
+                        setTicketForm((prev) => ({
+                          ...prev,
+                          description: event.target.value,
+                        }))
+                      }
+                      placeholder="Describe the issue or technician notes"
+                    />
+                  </div>
+                </div>
+
+                <div className="btn-row">
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={handleCreateTicket}
+                  >
+                    Create ticket
+                  </button>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={() => setTicketForm(blankTicketForm)}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-title">🔎 Ticket lookup</div>
+                <div
+                  className="form-grid form-grid-2"
+                  style={{ marginBottom: "1rem" }}
+                >
+                  <div className="field">
+                    <label>Search type</label>
+                    <select
+                      value={ticketSearchType}
+                      onChange={(event) =>
+                        setTicketSearchType(event.target.value)
+                      }
+                    >
+                      <option value="ticket">Ticket number</option>
+                      <option value="serial">Serial number</option>
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Search value</label>
+                    <input
+                      type="text"
+                      value={ticketSearchValue}
+                      onChange={(event) =>
+                        setTicketSearchValue(event.target.value)
+                      }
+                      placeholder={
+                        ticketSearchType === "serial"
+                          ? "Enter serial number"
+                          : "Enter ticket number"
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="btn-row">
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={handleLookupTicket}
+                  >
+                    Lookup ticket
+                  </button>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={() => {
+                      setTicketSearchValue("");
+                      setTicketLookupResult(null);
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                {ticketLookupResult ? (
+                  <div className="lookup-result show">
+                    <div className="lookup-grid">
+                      <div className="lookup-item">
+                        <div className="lk-label">Ticket</div>
+                        <div className="lk-value">
+                          {ticketLookupResult.ticket_number ||
+                            ticketLookupResult.id}
+                        </div>
+                      </div>
+                      <div className="lookup-item">
+                        <div className="lk-label">Serial</div>
+                        <div className="lk-value">
+                          {ticketLookupResult.serial_number}
+                        </div>
+                      </div>
+                      <div className="lookup-item">
+                        <div className="lk-label">Status</div>
+                        <div
+                          className={`badge ${ticketBadgeClass(ticketLookupResult.status)}`}
+                        >
+                          {ticketBadgeLabel(ticketLookupResult.status)}
+                        </div>
+                      </div>
+                      <div className="lookup-item">
+                        <div className="lk-label">Subject</div>
+                        <div className="lk-value">
+                          {ticketLookupResult.subject || "—"}
+                        </div>
+                      </div>
+                      <div className="lookup-item">
+                        <div className="lk-label">Created</div>
+                        <div className="lk-value">
+                          {formatDate(ticketLookupResult.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="btn-row" style={{ marginTop: "1rem" }}>
+                      <button
+                        className="btn btn-primary"
+                        type="button"
+                        onClick={() => openTicketEdit(ticketLookupResult)}
+                      >
+                        Edit ticket
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="search-bar">
+                <input
+                  type="text"
+                  placeholder="Filter tickets by number or serial"
+                  value={ticketSearchQuery}
+                  onChange={(event) => setTicketSearchQuery(event.target.value)}
+                />
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  onClick={fetchTickets}
+                >
+                  Refresh
+                </button>
+              </div>
+
+              <div id="tableContainer">
+                {ticketLoading ? (
+                  <div className="empty-state">
+                    <span className="spinner"></span>
+                    <p style={{ marginTop: 12 }}>Loading tickets...</p>
+                  </div>
+                ) : filteredTickets.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="icon">📭</div>
+                    No tickets found
+                  </div>
+                ) : (
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Ticket</th>
+                          <th>Serial</th>
+                          <th>Subject</th>
+                          <th>Status</th>
+                          <th>Created</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredTickets.map((ticket) => (
+                          <tr key={`${ticket.id}-${ticket.ticket_number}`}>
+                            <td>
+                              <span className="mono">
+                                {ticket.ticket_number || ticket.id}
+                              </span>
+                            </td>
+                            <td>{ticket.serial_number || "—"}</td>
+                            <td>{ticket.subject || "—"}</td>
+                            <td>
+                              <span
+                                className={`badge ${ticketBadgeClass(ticket.status)}`}
+                              >
+                                {ticketBadgeLabel(ticket.status)}
+                              </span>
+                            </td>
+                            <td>{formatDate(ticket.created_at)}</td>
+                            <td>
+                              <button
+                                className="action-btn"
+                                type="button"
+                                title="Edit"
+                                onClick={() => openTicketEdit(ticket)}
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="action-btn danger"
+                                type="button"
+                                title="Delete"
+                                onClick={() =>
+                                  handleDeleteTicket(
+                                    ticket.id || ticket.ticket_number,
+                                  )
+                                }
+                              >
+                                🗑
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {ticketEditId ? (
+                <div className="card">
+                  <div className="card-title">✏️ Update ticket status</div>
+                  <div
+                    className="form-grid form-grid-2"
+                    style={{ marginBottom: "1rem" }}
+                  >
+                    <div className="field">
+                      <label>Ticket number</label>
+                      <input type="text" value={ticketEditId} disabled />
+                    </div>
+                    <div className="field">
+                      <label>Status</label>
+                      <select
+                        value={ticketEditStatus}
+                        onChange={(event) =>
+                          setTicketEditStatus(event.target.value)
+                        }
+                      >
+                        <option value="Open">Open</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="btn-row">
+                    <button
+                      className="btn btn-primary"
+                      type="button"
+                      onClick={handleUpdateTicket}
+                    >
+                      Update status
+                    </button>
+                    <button
+                      className="btn"
+                      type="button"
+                      onClick={() => setTicketEditId(null)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
 

@@ -133,3 +133,43 @@ export function statusBadgeLabel(status) {
   if (normalized.includes("service plan")) return "Service Plan Active";
   return status || "—";
 }
+
+export function normalizeTicket(ticket) {
+  if (!ticket || typeof ticket !== "object") return {};
+  return {
+    id:
+      ticket.id ??
+      ticket._id ??
+      ticket.ticket_id ??
+      ticket.ticketNumber ??
+      null,
+    ticket_number:
+      ticket.ticket_number ??
+      ticket.ticketNumber ??
+      ticket.ticket_id ??
+      ticket.id ??
+      "",
+    serial_number:
+      ticket.serial_number ?? ticket.serial ?? ticket.serialNumber ?? "",
+    status: ticket.status ?? ticket.ticket_status ?? ticket.state ?? "",
+    subject: ticket.subject ?? ticket.title ?? ticket.summary ?? "",
+    description: ticket.description ?? ticket.body ?? ticket.details ?? "",
+    created_at:
+      ticket.created_at ?? ticket.createdAt ?? ticket.created_date ?? "",
+  };
+}
+
+export function ticketBadgeClass(status) {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized.includes("closed") || normalized.includes("resolved"))
+    return "badge-green";
+  if (normalized.includes("open")) return "badge-blue";
+  if (normalized.includes("pending")) return "badge-gray";
+  if (normalized.includes("cancel") || normalized.includes("failed"))
+    return "badge-red";
+  return "badge-gray";
+}
+
+export function ticketBadgeLabel(status) {
+  return status || "—";
+}
