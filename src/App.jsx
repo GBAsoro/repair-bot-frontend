@@ -33,11 +33,18 @@ const blankTicketForm = {
 };
 
 const navItems = [
-  { key: "add", label: "Add record", icon: "➕" },
-  { key: "list", label: "All records", icon: "📋" },
-  { key: "lookup", label: "Look up serial", icon: "🔍" },
-  { key: "tickets", label: "Tickets", icon: "🎫" },
-  { key: "config", label: "API config", icon: "⚙️" },
+  { key: "add", label: "Add record", icon: "➕", group: "warranty" },
+  { key: "list", label: "All records", icon: "📋", group: "warranty" },
+  { key: "lookup", label: "Look up serial", icon: "🔍", group: "warranty" },
+  { key: "tickets-add", label: "Create ticket", icon: "➕", group: "tickets" },
+  {
+    key: "tickets-lookup",
+    label: "Lookup ticket",
+    icon: "🔎",
+    group: "tickets",
+  },
+  { key: "tickets-list", label: "All tickets", icon: "📋", group: "tickets" },
+  { key: "config", label: "API config", icon: "⚙️", group: "settings" },
 ];
 
 function App() {
@@ -46,6 +53,7 @@ function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [alerts, setAlerts] = useState({});
   const [warrantyOpen, setWarrantyOpen] = useState(false);
+  const [ticketsOpen, setTicketsOpen] = useState(false);
   const [addForm, setAddForm] = useState(blankForm);
   const [editForm, setEditForm] = useState(blankForm);
   const [currentEditId, setCurrentEditId] = useState(null);
@@ -73,8 +81,14 @@ function App() {
     if (activePage === "list") {
       fetchRecords();
     }
-    if (activePage === "tickets") {
+    if (activePage === "tickets-list") {
       fetchTickets();
+    }
+    if (activePage.startsWith("tickets")) {
+      setTicketsOpen(true);
+    }
+    if (["add", "list", "lookup"].includes(activePage)) {
+      setWarrantyOpen(true);
     }
   }, [activePage]);
 
@@ -595,9 +609,7 @@ function App() {
             {warrantyOpen ? (
               <div className="nav-children">
                 {navItems
-                  .filter(
-                    (item) => item.key !== "config" && item.key !== "tickets",
-                  )
+                  .filter((item) => item.group === "warranty")
                   .map((item) => (
                     <button
                       key={item.key}
@@ -620,14 +632,33 @@ function App() {
             <div className="sidebar-label">Tickets</div>
             <button
               type="button"
-              className={
-                activePage === "tickets" ? "nav-item active" : "nav-item"
-              }
-              onClick={() => setActivePage("tickets")}
+              className={ticketsOpen ? "nav-item active" : "nav-item"}
+              onClick={() => setTicketsOpen((s) => !s)}
             >
               <span className="nav-icon">🎫</span>
               Tickets
             </button>
+            {ticketsOpen ? (
+              <div className="nav-children">
+                {navItems
+                  .filter((item) => item.group === "tickets")
+                  .map((item) => (
+                    <button
+                      key={item.key}
+                      className={
+                        item.key === activePage
+                          ? "nav-item nav-child active"
+                          : "nav-item nav-child"
+                      }
+                      type="button"
+                      onClick={() => setActivePage(item.key)}
+                    >
+                      <span className="nav-icon">{item.icon}</span>
+                      {item.label}
+                    </button>
+                  ))}
+              </div>
+            ) : null}
           </div>
           <div className="sidebar-section" style={{ marginTop: "1rem" }}>
             <div className="sidebar-label">Settings</div>
@@ -921,11 +952,11 @@ function App() {
             </div>
           )}
 
-          {activePage === "tickets" && (
+          {activePage === "tickets-add" && (
             <div className="page active">
               <div className="page-header">
-                <h2>Tickets</h2>
-                <p>Manage support tickets using the RepairBot API endpoints.</p>
+                <h2>Create ticket</h2>
+                <p>Add a new support ticket for a warranty item.</p>
               </div>
 
               {alerts.tickets ? (
@@ -1044,6 +1075,21 @@ function App() {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activePage === "tickets-lookup" && (
+            <div className="page active">
+              <div className="page-header">
+                <h2>Ticket lookup</h2>
+                <p>Search tickets by number or serial.</p>
+              </div>
+
+              {alerts.tickets ? (
+                <div className={`alert show ${alerts.tickets.type}`}>
+                  {alerts.tickets.message}
+                </div>
+              ) : null}
 
               <div className="card">
                 <div className="card-title">🔎 Ticket lookup</div>
@@ -1160,6 +1206,21 @@ function App() {
                   </div>
                 ) : null}
               </div>
+            </div>
+          )}
+
+          {activePage === "tickets-list" && (
+            <div className="page active">
+              <div className="page-header">
+                <h2>All tickets</h2>
+                <p>Browse and manage created tickets.</p>
+              </div>
+
+              {alerts.tickets ? (
+                <div className={`alert show ${alerts.tickets.type}`}>
+                  {alerts.tickets.message}
+                </div>
+              ) : null}
 
               <div className="card">
                 <div className="card-title">📋 Ticket list</div>
@@ -1254,53 +1315,53 @@ function App() {
                   )}
                 </div>
               </div>
-
-              {ticketEditId ? (
-                <div className="card">
-                  <div className="card-title">✏️ Update ticket status</div>
-                  <div
-                    className="form-grid form-grid-2"
-                    style={{ marginBottom: "1rem" }}
-                  >
-                    <div className="field">
-                      <label>Ticket number</label>
-                      <input type="text" value={ticketEditId} disabled />
-                    </div>
-                    <div className="field">
-                      <label>Status</label>
-                      <select
-                        value={ticketEditStatus}
-                        onChange={(event) =>
-                          setTicketEditStatus(event.target.value)
-                        }
-                      >
-                        <option value="OPEN">Open</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="CLOSED">Closed</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="btn-row">
-                    <button
-                      className="btn btn-primary"
-                      type="button"
-                      onClick={handleUpdateTicket}
-                    >
-                      Update status
-                    </button>
-                    <button
-                      className="btn"
-                      type="button"
-                      onClick={() => setTicketEditId(null)}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              ) : null}
             </div>
           )}
+
+          {activePage.startsWith("tickets") && ticketEditId ? (
+            <div className="card">
+              <div className="card-title">✏️ Update ticket status</div>
+              <div
+                className="form-grid form-grid-2"
+                style={{ marginBottom: "1rem" }}
+              >
+                <div className="field">
+                  <label>Ticket number</label>
+                  <input type="text" value={ticketEditId} disabled />
+                </div>
+                <div className="field">
+                  <label>Status</label>
+                  <select
+                    value={ticketEditStatus}
+                    onChange={(event) =>
+                      setTicketEditStatus(event.target.value)
+                    }
+                  >
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
+              </div>
+              <div className="btn-row">
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  onClick={handleUpdateTicket}
+                >
+                  Update status
+                </button>
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() => setTicketEditId(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {activePage === "lookup" && (
             <div className="page active">
