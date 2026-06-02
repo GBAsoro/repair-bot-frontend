@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap");
 
 *,
 *::before,
@@ -34,7 +34,18 @@ body {
     "Segoe UI",
     Roboto,
     sans-serif;
-  background: var(--bg);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(31, 122, 95, 0.08),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(59, 130, 246, 0.08),
+      transparent 26%
+    ),
+    var(--bg);
   color: var(--text);
   min-height: 100vh;
   line-height: 1.5;
@@ -158,12 +169,12 @@ body {
 }
 .sidebar-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   color: var(--muted);
   padding: 0 0.5rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.85rem;
 }
 .nav-item {
   display: flex;
@@ -210,10 +221,20 @@ body {
   padding-left: 8px;
   margin-top: 6px;
 }
-.nav-child {
-  padding-left: 6px;
+.nav-item.nav-child {
+  padding-left: 14px;
   font-size: 13px;
-  color: #666;
+  color: #556680;
+  border-radius: 14px;
+  background: transparent;
+}
+.nav-item.nav-child:hover {
+  background: rgba(31, 122, 95, 0.08);
+  color: var(--accent);
+}
+.nav-item.nav-child.active {
+  background: rgba(31, 122, 95, 0.16);
+  color: var(--accent);
 }
 .nav-child .nav-icon {
   opacity: 0.85;
@@ -256,38 +277,63 @@ body {
 
 /* ── Main ── */
 .main {
-  padding: 2rem;
+  padding: 2.5rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(243, 247, 251, 0.95)
+  );
 }
 .page-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.8rem;
 }
 .page-header h2 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .page-header p {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 8px;
+  max-width: 760px;
+  line-height: 1.7;
 }
 
 /* ── Cards ── */
 .card {
-  background: var(--surface-alt);
-  border: 1px solid rgba(31, 122, 95, 0.08);
-  border-radius: 26px;
-  padding: 1.8rem;
+  background: var(--surface);
+  border: 1px solid rgba(31, 122, 95, 0.12);
+  border-radius: 28px;
+  padding: 2rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.08);
 }
 .card-title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: 1.35rem;
-  display: flex;
+  margin-bottom: 0.75rem;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   color: var(--text);
+}
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 1.2rem;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(31, 122, 95, 0.12);
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 /* ── Form ── */

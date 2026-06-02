@@ -25,7 +25,6 @@ const blankForm = {
 };
 
 const blankTicketForm = {
-  warrantyNumber: "",
   serial: "",
   status: "OPEN",
   fault: "",
@@ -355,10 +354,6 @@ function App() {
 
   const handleCreateTicket = async () => {
     if (!requireConfig("tickets")) return;
-    if (!ticketForm.warrantyNumber.trim()) {
-      showAlert("tickets", "⚠ Warranty number is required", "alert-error");
-      return;
-    }
     if (!ticketForm.serial.trim()) {
       showAlert("tickets", "⚠ Serial number is required", "alert-error");
       return;
@@ -369,7 +364,6 @@ function App() {
     }
 
     const payload = {
-      warranty_number: ticketForm.warrantyNumber.trim() || undefined,
       serial_number: ticketForm.serial.trim(),
       status: ticketForm.status || undefined,
       fault: ticketForm.fault || undefined,
@@ -971,20 +965,6 @@ function App() {
                   className="form-grid form-grid-2"
                   style={{ marginBottom: "1rem" }}
                 >
-                  <div className="field">
-                    <label>Warranty number</label>
-                    <input
-                      type="text"
-                      value={ticketForm.warrantyNumber}
-                      onChange={(event) =>
-                        setTicketForm((prev) => ({
-                          ...prev,
-                          warrantyNumber: event.target.value,
-                        }))
-                      }
-                      placeholder="WNT-12345"
-                    />
-                  </div>
                   <div className="field">
                     <label>Serial number</label>
                     <input
@@ -1612,7 +1592,10 @@ function App() {
               </div>
 
               <div className="card">
-                <div className="card-title">⚙️ Connection settings</div>
+                <div className="card-header-row">
+                  <div className="card-title">⚙️ Connection settings</div>
+                  <span className="status-pill">Secure connection</span>
+                </div>
                 <div
                   className="form-grid form-grid-3"
                   style={{ marginBottom: "1rem" }}
