@@ -31,6 +31,7 @@ const navItems = [
 function App() {
   const [cfg, setCfg] = useState({ baseUrl: "", apiKey: "", adminSecret: "" });
   const [activePage, setActivePage] = useState("config");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [alerts, setAlerts] = useState({});
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [addForm, setAddForm] = useState(blankForm);
@@ -301,6 +302,11 @@ function App() {
 
   const statusConnected = cfg.baseUrl && cfg.apiKey;
 
+  const setPage = (page) => {
+    setActivePage(page);
+    setMobileNavOpen(false);
+  };
+
   return (
     <div>
       <header className="topbar">
@@ -308,15 +314,40 @@ function App() {
           <div className="icon">🔧</div>
           RepairBot API
         </div>
-        <div className="topbar-status">
-          <div
-            className={statusConnected ? "status-dot connected" : "status-dot"}
-          />
-          <span id="statusText">
-            {statusConnected ? `Connected — ${cfg.baseUrl}` : "Not connected"}
-          </span>
+        <div className="topbar-actions">
+          <button
+            type="button"
+            className="mobile-menu-btn"
+            aria-label="Toggle navigation"
+            onClick={() => setMobileNavOpen((open) => !open)}
+          >
+            ☰
+          </button>
+          <div className="topbar-status">
+            <div
+              className={
+                statusConnected ? "status-dot connected" : "status-dot"
+              }
+            />
+            <span id="statusText">
+              {statusConnected ? `Connected — ${cfg.baseUrl}` : "Not connected"}
+            </span>
+          </div>
         </div>
       </header>
+      <div className={mobileNavOpen ? "mobile-nav show" : "mobile-nav"}>
+        {navItems.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={item.key === activePage ? "nav-item active" : "nav-item"}
+            onClick={() => setPage(item.key)}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </div>
 
       <div className="layout">
         <aside className="sidebar">
