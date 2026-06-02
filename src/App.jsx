@@ -25,10 +25,10 @@ const blankForm = {
 };
 
 const blankTicketForm = {
-  ticketNumber: "",
+  warrantyNumber: "",
   serial: "",
-  status: "Open",
-  subject: "",
+  status: "OPEN",
+  fault: "",
   description: "",
 };
 
@@ -61,7 +61,7 @@ function App() {
   const [ticketLookupResult, setTicketLookupResult] = useState(null);
   const [ticketForm, setTicketForm] = useState(blankTicketForm);
   const [ticketEditId, setTicketEditId] = useState(null);
-  const [ticketEditStatus, setTicketEditStatus] = useState("Open");
+  const [ticketEditStatus, setTicketEditStatus] = useState("OPEN");
   const [ticketLoading, setTicketLoading] = useState(false);
   const [ticketSearchQuery, setTicketSearchQuery] = useState("");
 
@@ -341,15 +341,24 @@ function App() {
 
   const handleCreateTicket = async () => {
     if (!requireConfig("tickets")) return;
+    if (!ticketForm.warrantyNumber.trim()) {
+      showAlert("tickets", "⚠ Warranty number is required", "alert-error");
+      return;
+    }
     if (!ticketForm.serial.trim()) {
       showAlert("tickets", "⚠ Serial number is required", "alert-error");
       return;
     }
+    if (!ticketForm.fault.trim()) {
+      showAlert("tickets", "⚠ Fault description is required", "alert-error");
+      return;
+    }
 
     const payload = {
+      warranty_number: ticketForm.warrantyNumber.trim() || undefined,
       serial_number: ticketForm.serial.trim(),
       status: ticketForm.status || undefined,
-      subject: ticketForm.subject || undefined,
+      fault: ticketForm.fault || undefined,
       description: ticketForm.description || undefined,
     };
 
@@ -422,7 +431,12 @@ function App() {
 
   const openTicketEdit = (ticket) => {
     setTicketEditId(ticket.id || ticket.ticket_number);
-    setTicketEditStatus(ticket.status || "Open");
+    setTicketEditStatus(
+      String(ticket.status || "OPEN")
+        .trim()
+        .replace(/\s+/g, "_")
+        .toUpperCase(),
+    );
     setTicketLookupResult(ticket);
   };
 
@@ -501,7 +515,7 @@ function App() {
 
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) =>
-      `${ticket.ticket_number} ${ticket.serial_number}`
+      `${ticket.ticket_number} ${ticket.warranty_number} ${ticket.serial_number}`
         .toLowerCase()
         .includes(ticketSearchQuery.toLowerCase()),
     );
@@ -927,6 +941,20 @@ function App() {
                   style={{ marginBottom: "1rem" }}
                 >
                   <div className="field">
+                    <label>Warranty number</label>
+                    <input
+                      type="text"
+                      value={ticketForm.warrantyNumber}
+                      onChange={(event) =>
+                        setTicketForm((prev) => ({
+                          ...prev,
+                          warrantyNumber: event.target.value,
+                        }))
+                      }
+                      placeholder="WNT-12345"
+                    />
+                  </div>
+                  <div className="field">
                     <label>Serial number</label>
                     <input
                       type="text"
@@ -940,6 +968,12 @@ function App() {
                       placeholder="SM100-ABC-001"
                     />
                   </div>
+                </div>
+
+                <div
+                  className="form-grid form-grid-2"
+                  style={{ marginBottom: "1rem" }}
+                >
                   <div className="field">
                     <label>Status</label>
                     <select
@@ -951,30 +985,24 @@ function App() {
                         }))
                       }
                     >
-                      <option value="Open">Open</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Resolved">Resolved</option>
-                      <option value="Closed">Closed</option>
+                      <option value="OPEN">Open</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="RESOLVED">Resolved</option>
+                      <option value="CLOSED">Closed</option>
                     </select>
                   </div>
-                </div>
-
-                <div
-                  className="form-grid form-grid-1"
-                  style={{ marginBottom: "1rem" }}
-                >
                   <div className="field">
-                    <label>Subject</label>
+                    <label>Fault</label>
                     <input
                       type="text"
-                      value={ticketForm.subject}
+                      value={ticketForm.fault}
                       onChange={(event) =>
                         setTicketForm((prev) => ({
                           ...prev,
-                          subject: event.target.value,
+                          fault: event.target.value,
                         }))
                       }
-                      placeholder="Ticket subject"
+                      placeholder="Describe the fault"
                     />
                   </div>
                 </div>
@@ -1082,6 +1110,12 @@ function App() {
                         </div>
                       </div>
                       <div className="lookup-item">
+                        <div className="lk-label">Warranty</div>
+                        <div className="lk-value">
+                          {ticketLookupResult.warranty_number || "—"}
+                        </div>
+                      </div>
+                      <div className="lookup-item">
                         <div className="lk-label">Serial</div>
                         <div className="lk-value">
                           {ticketLookupResult.serial_number}
@@ -1096,9 +1130,9 @@ function App() {
                         </div>
                       </div>
                       <div className="lookup-item">
-                        <div className="lk-label">Subject</div>
+                        <div className="lk-label">Fault</div>
                         <div className="lk-value">
-                          {ticketLookupResult.subject || "—"}
+                          {ticketLookupResult.fault || "—"}
                         </div>
                       </div>
                       <div className="lookup-item">
@@ -1154,8 +1188,9 @@ function App() {
                       <thead>
                         <tr>
                           <th>Ticket</th>
+                          <th>Warranty</th>
                           <th>Serial</th>
-                          <th>Subject</th>
+                          <th>Fault</th>
                           <th>Status</th>
                           <th>Created</th>
                           <th>Actions</th>
@@ -1169,8 +1204,9 @@ function App() {
                                 {ticket.ticket_number || ticket.id}
                               </span>
                             </td>
+                            <td>{ticket.warranty_number || "—"}</td>
                             <td>{ticket.serial_number || "—"}</td>
-                            <td>{ticket.subject || "—"}</td>
+                            <td>{ticket.fault || "—"}</td>
                             <td>
                               <span
                                 className={`badge ${ticketBadgeClass(ticket.status)}`}
@@ -1228,10 +1264,10 @@ function App() {
                           setTicketEditStatus(event.target.value)
                         }
                       >
-                        <option value="Open">Open</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
+                        <option value="OPEN">Open</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
                       </select>
                     </div>
                   </div>

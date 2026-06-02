@@ -149,10 +149,13 @@ export function normalizeTicket(ticket) {
       ticket.ticket_id ??
       ticket.id ??
       "",
+    warranty_number:
+      ticket.warranty_number ?? ticket.warrantyNumber ?? ticket.warranty ?? "",
     serial_number:
       ticket.serial_number ?? ticket.serial ?? ticket.serialNumber ?? "",
     status: ticket.status ?? ticket.ticket_status ?? ticket.state ?? "",
-    subject: ticket.subject ?? ticket.title ?? ticket.summary ?? "",
+    fault:
+      ticket.fault ?? ticket.subject ?? ticket.title ?? ticket.summary ?? "",
     description: ticket.description ?? ticket.body ?? ticket.details ?? "",
     created_at:
       ticket.created_at ?? ticket.createdAt ?? ticket.created_date ?? "",
@@ -163,7 +166,12 @@ export function ticketBadgeClass(status) {
   const normalized = String(status || "").toLowerCase();
   if (normalized.includes("closed") || normalized.includes("resolved"))
     return "badge-green";
-  if (normalized.includes("open")) return "badge-blue";
+  if (
+    normalized.includes("open") ||
+    normalized.includes("in_progress") ||
+    normalized.includes("in progress")
+  )
+    return "badge-blue";
   if (normalized.includes("pending")) return "badge-gray";
   if (normalized.includes("cancel") || normalized.includes("failed"))
     return "badge-red";
@@ -171,5 +179,11 @@ export function ticketBadgeClass(status) {
 }
 
 export function ticketBadgeLabel(status) {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized.includes("in_progress") || normalized.includes("in progress"))
+    return "In Progress";
+  if (normalized.includes("open")) return "Open";
+  if (normalized.includes("resolved")) return "Resolved";
+  if (normalized.includes("closed")) return "Closed";
   return status || "—";
 }
