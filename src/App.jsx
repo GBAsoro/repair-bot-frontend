@@ -363,7 +363,12 @@ function App() {
       if (!res.ok) return null;
       const data = await res.json().catch(() => null);
       return (
-        data?.warranty_number ?? data?.warrantyNumber ?? data?.warranty ?? null
+        data?.warranty_number ??
+        data?.warrantyNumber ??
+        data?.warranty ??
+        data?.id ??
+        data?._id ??
+        null
       );
     } catch {
       return null;
@@ -383,8 +388,17 @@ function App() {
 
     const serial = ticketForm.serial.trim();
     const warrantyNumber = await fetchWarrantyNumberForSerial(serial);
+    if (!warrantyNumber) {
+      showAlert(
+        "tickets",
+        "⚠ Could not find a linked warranty for this serial. Ticket creation requires a warranty number.",
+        "alert-error",
+      );
+      return;
+    }
+
     const payload = {
-      ...(warrantyNumber ? { warranty_number: warrantyNumber } : {}),
+      warranty_number: warrantyNumber,
       serial_number: serial,
       status: ticketForm.status || undefined,
       fault: ticketForm.fault || undefined,
