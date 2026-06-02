@@ -1135,6 +1135,12 @@ function App() {
                           {ticketLookupResult.fault || "—"}
                         </div>
                       </div>
+                      <div className="lookup-item full-width">
+                        <div className="lk-label">Description</div>
+                        <div className="lk-value">
+                          {ticketLookupResult.description || "—"}
+                        </div>
+                      </div>
                       <div className="lookup-item">
                         <div className="lk-label">Created</div>
                         <div className="lk-value">
