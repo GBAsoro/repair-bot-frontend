@@ -352,6 +352,24 @@ function App() {
     }
   };
 
+  const fetchWarrantyNumberForSerial = async (serial) => {
+    try {
+      const res = await fetch(
+        `${cfg.baseUrl}/tools/warranty/check?serial_number=${encodeURIComponent(
+          serial,
+        )}`,
+        { headers: getHeaders(cfg, false) },
+      );
+      if (!res.ok) return null;
+      const data = await res.json().catch(() => null);
+      return (
+        data?.warranty_number ?? data?.warrantyNumber ?? data?.warranty ?? null
+      );
+    } catch {
+      return null;
+    }
+  };
+
   const handleCreateTicket = async () => {
     if (!requireConfig("tickets")) return;
     if (!ticketForm.serial.trim()) {
@@ -363,8 +381,11 @@ function App() {
       return;
     }
 
+    const serial = ticketForm.serial.trim();
+    const warrantyNumber = await fetchWarrantyNumberForSerial(serial);
     const payload = {
-      serial_number: ticketForm.serial.trim(),
+      ...(warrantyNumber ? { warranty_number: warrantyNumber } : {}),
+      serial_number: serial,
       status: ticketForm.status || undefined,
       fault: ticketForm.fault || undefined,
       description: ticketForm.description || undefined,
