@@ -1161,94 +1161,98 @@ function App() {
                 ) : null}
               </div>
 
-              <div className="search-bar">
-                <input
-                  type="text"
-                  placeholder="Filter tickets by number or serial"
-                  value={ticketSearchQuery}
-                  onChange={(event) => setTicketSearchQuery(event.target.value)}
-                />
-                <button
-                  className="btn btn-primary"
-                  type="button"
-                  onClick={fetchTickets}
-                >
-                  Refresh
-                </button>
-              </div>
-
-              <div id="tableContainer">
-                {ticketLoading ? (
-                  <div className="empty-state">
-                    <span className="spinner"></span>
-                    <p style={{ marginTop: 12 }}>Loading tickets...</p>
-                  </div>
-                ) : filteredTickets.length === 0 ? (
-                  <div className="empty-state">
-                    <div className="icon">📭</div>
-                    No tickets found
-                  </div>
-                ) : (
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Ticket</th>
-                          <th>Warranty</th>
-                          <th>Serial</th>
-                          <th>Fault</th>
-                          <th>Status</th>
-                          <th>Created</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredTickets.map((ticket) => (
-                          <tr key={`${ticket.id}-${ticket.ticket_number}`}>
-                            <td>
-                              <span className="mono">
-                                {ticket.ticket_number || ticket.id}
-                              </span>
-                            </td>
-                            <td>{ticket.warranty_number || "—"}</td>
-                            <td>{ticket.serial_number || "—"}</td>
-                            <td>{ticket.fault || "—"}</td>
-                            <td>
-                              <span
-                                className={`badge ${ticketBadgeClass(ticket.status)}`}
-                              >
-                                {ticketBadgeLabel(ticket.status)}
-                              </span>
-                            </td>
-                            <td>{formatDate(ticket.created_at)}</td>
-                            <td>
-                              <button
-                                className="action-btn"
-                                type="button"
-                                title="Edit"
-                                onClick={() => openTicketEdit(ticket)}
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                className="action-btn danger"
-                                type="button"
-                                title="Delete"
-                                onClick={() =>
-                                  handleDeleteTicket(
-                                    ticket.id || ticket.ticket_number,
-                                  )
-                                }
-                              >
-                                🗑
-                              </button>
-                            </td>
+              <div className="card">
+                <div className="card-title">📋 Ticket list</div>
+                <div className="search-bar" style={{ marginBottom: "1rem" }}>
+                  <input
+                    type="text"
+                    placeholder="Filter tickets by number or serial"
+                    value={ticketSearchQuery}
+                    onChange={(event) =>
+                      setTicketSearchQuery(event.target.value)
+                    }
+                  />
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={fetchTickets}
+                  >
+                    Refresh
+                  </button>
+                </div>
+                <div id="tableContainer">
+                  {ticketLoading ? (
+                    <div className="empty-state">
+                      <span className="spinner"></span>
+                      <p style={{ marginTop: 12 }}>Loading tickets...</p>
+                    </div>
+                  ) : filteredTickets.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="icon">📭</div>
+                      No tickets found
+                    </div>
+                  ) : (
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Ticket</th>
+                            <th>Warranty</th>
+                            <th>Serial</th>
+                            <th>Fault</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        </thead>
+                        <tbody>
+                          {filteredTickets.map((ticket) => (
+                            <tr key={`${ticket.id}-${ticket.ticket_number}`}>
+                              <td>
+                                <span className="mono">
+                                  {ticket.ticket_number || ticket.id}
+                                </span>
+                              </td>
+                              <td>{ticket.warranty_number || "—"}</td>
+                              <td>{ticket.serial_number || "—"}</td>
+                              <td>{ticket.fault || "—"}</td>
+                              <td>
+                                <span
+                                  className={`badge ${ticketBadgeClass(ticket.status)}`}
+                                >
+                                  {ticketBadgeLabel(ticket.status)}
+                                </span>
+                              </td>
+                              <td>{formatDate(ticket.created_at)}</td>
+                              <td>
+                                <button
+                                  className="action-btn"
+                                  type="button"
+                                  title="Edit"
+                                  onClick={() => openTicketEdit(ticket)}
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  className="action-btn danger"
+                                  type="button"
+                                  title="Delete"
+                                  onClick={() =>
+                                    handleDeleteTicket(
+                                      ticket.id || ticket.ticket_number,
+                                    )
+                                  }
+                                >
+                                  🗑
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {ticketEditId ? (
